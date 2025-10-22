@@ -7,6 +7,7 @@
 #include <string.h>
 
 #define VEC_GROWTH 2
+#define VEC_GET(type, vec, i) ((type*)vec_get(vec, i))
 
 typedef struct Vector { // d_array
   void* data; // int, uint, float, double
@@ -17,36 +18,34 @@ typedef struct Vector { // d_array
 
 
 Vector* vec_new(size_t initial_cap, size_t element_size) {
-  
-  if (element_size == 0) {
-    errno = EINVAL;
-    return NULL;
-  }
+    if (element_size == 0) {
+        errno = EINVAL;
+        return NULL;
+    }
 
-  Vector* vec = (Vector*)malloc(sizeof(Vector));
-  if (vec == NULL) {
-    perror("Failed to alloc some memory for the vector\n");
-    return NULL;
-  }
+    if (initial_cap == 0) {
+        initial_cap = 32; // default cap
+    }
 
-  vec->length = 0;
-  vec->element_size = element_size;
+    Vector* vec = malloc(sizeof(Vector));
+    if (vec == NULL) {
+        perror("Failed to allocate memory for the vector\n");
+        return NULL;
+    }
 
-  if (initial_cap > 0) {
     vec->data = malloc(initial_cap * element_size);
     if (vec->data == NULL) {
-      perror("Failed to allocate some memory for the data of the vector\n");
-      return NULL;
+        perror("Failed to allocate memory for the vector data\n");
+        free(vec);
+        return NULL;
     }
 
     vec->capacity = initial_cap;
-  } else {
-    vec->data = NULL;
-    vec->capacity = 0;
-  }
-
-  return vec;
+    vec->length = 0;
+    vec->element_size = element_size;
+    return vec;
 }
+
 
 void vec_free(Vector* vec) {
   if (vec == NULL) {
@@ -97,7 +96,7 @@ size_t vec_len(Vector* vec) {
 }
 
 void* vec_get(Vector* vec, size_t idx) {
-  if (vec == NULL | idx >= vec->length) {
+  if (vec == NULL || idx >= vec->length) {
     return NULL;
   }
 
