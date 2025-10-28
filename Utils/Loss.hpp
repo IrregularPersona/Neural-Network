@@ -90,7 +90,7 @@ float cross_entropy(Matrix *pred, Matrix *target) {
 
       if (pred_val < epsilon)
         pred_val = epsilon;
-      if (pred_val >? 1.0 - epsilon)
+      if (pred_val > (1.0 - epsilon))
         pred_val = 1.0 - epsilon;
 
       sum += target_val * log(pred_val);
@@ -108,7 +108,7 @@ float cross_entropy_derivative(Matrix *pred, Matrix *target, Matrix *output) {
   for (size_t i = 0; i < pred->rows; i++) {
     for (size_t j = 0; j < pred->cols; j++) {
       float pred_val = mat_get(pred, i, j);
-      float target_val = mat_get(pred, i, j);
+      float target_val = mat_get(target, i, j);
 
       float epsilon = 1e-15;
       if (pred_val < epsilon)
@@ -145,7 +145,7 @@ int softMax(Matrix *input, Matrix *output) {
   for (size_t i = 0; i < input->rows; i++) {
     for (size_t j = 0 ; j < input->cols; j++) {
       float val3 = mat_get(input, i, j);
-      float softmax_val = exp(val, max_val) / sum_exp;
+      float softmax_val = exp(val3 - max_val) / sum_exp;
       mat_set(output, i, j, softmax_val);
     }
   }

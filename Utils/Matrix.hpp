@@ -1,9 +1,5 @@
 #pragma once
 
-// Neural Network Matrix Implementation
-// Optimized for float32 operations with SIMD support
-// Linux-focused implementation using aligned_alloc
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -183,10 +179,83 @@ void mat_zero(Matrix* mat) {
 }
 
 // ============================================================================
+// MATRIX OPERATIONS
+// ============================================================================
+
+// Matrix multiplication: result = a * b
+int mat_mul(const Matrix* a, const Matrix* b, Matrix* result) {
+    if (!a || !b || !result) return -1;
+    if (!mat_is_valid(a) || !mat_is_valid(b) || !mat_is_valid(result)) return -1;
+    
+    // Check dimensions: a->cols must equal b->rows
+    if (a->cols != b->rows) return -1;
+    
+    // Check result dimensions
+    if (result->rows != a->rows || result->cols != b->cols) return -1;
+    
+    // Perform matrix multiplication
+    for (size_t i = 0; i < a->rows; i++) {
+        for (size_t j = 0; j < b->cols; j++) {
+            float sum = 0.0f;
+            for (size_t k = 0; k < a->cols; k++) {
+                sum += mat_get(a, i, k) * mat_get(b, k, j);
+            }
+            mat_set_unsafe(result, i, j, sum);
+        }
+    }
+    
+    return 0;
+}
+
+int mat_add(const Matrix* a, const Matrix* b, Matrix* result) {
+    if (!a || !b || !result) return -1;
+    if (!mat_is_valid(a) || !mat_is_valid(b) || !mat_is_valid(result)) return -1;
+    
+    if (a->rows != b->rows || a->cols != b->cols) return -1;
+    if (result->rows != a->rows || result->cols != a->cols) return -1;
+    
+    for (size_t i = 0; i < a->rows; i++) {
+        for (size_t j = 0; j < a->cols; j++) {
+            float sum = mat_get(a, i, j) + mat_get(b, i, j);
+            mat_set_unsafe(result, i, j, sum);
+        }
+    }
+    
+    return 0;
+}
+
+int mat_sub(const Matrix* a, const Matrix* b, Matrix* result) {
+    if (!a || !b || !result) return -1;
+    if (!mat_is_valid(a) || !mat_is_valid(b) || !mat_is_valid(result)) return -1;
+    if (a->rows != b->rows || a->cols != b->cols) return -1;
+    if (result->rows != a->rows || result->cols != a->cols) return -1;
+
+    for (size_t i = 0; i < a->rows; i++) {
+        for (size_t j = 0; j < a->cols; j++) {
+            float diff = mat_get(a, i, j) - mat_get(b, i, j);
+            mat_set_unsafe(result, i, j, diff);
+        }
+    }
+    
+    return 0;
+}
+
+void mat_scale(const Matrix* a, float scalar, Matrix* result) {
+    if (!mat_is_valid(a) || !result) return;
+    if (result->rows != a->rows || result->cols != a->cols) return;
+    
+    for (size_t i = 0; i < a->rows; i++) {
+        for (size_t j = 0; j < a->cols; j++) {
+            float value = mat_get(a, i, j) * scalar;
+            mat_set_unsafe(result, i, j, value);
+        }
+    }
+}
+
+// ============================================================================
 // DEBUGGING AND UTILITY
 // ============================================================================
 
-// Print matrix (for debugging)
 void mat_print(const Matrix* mat) {
     if (!mat_is_valid(mat)) {
         printf("Invalid matrix\n");
@@ -206,7 +275,7 @@ void mat_print(const Matrix* mat) {
     }
 }
 
-// Get matrix statistics
+// idk if this is needed
 typedef struct {
     float min, max, sum, mean;
 } M_Stats;
