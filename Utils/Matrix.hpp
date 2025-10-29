@@ -33,7 +33,11 @@ Matrix* mat_create(size_t rows, size_t cols) {
     
     size_t total_elements = rows * cols;
     
-    mat->data = (float*)aligned_alloc(32, total_elements * sizeof(float));
+    // needs to be rounded up to nearest multiple of 32 for alignment
+    size_t size_in_bytes = total_elements * sizeof(float);
+    size_t aligned_size = (size_in_bytes + 31) & ~31;  // rounding here
+    
+    mat->data = (float*)aligned_alloc(32, aligned_size);
     
     if (!mat->data) {
         free(mat);
@@ -44,7 +48,8 @@ Matrix* mat_create(size_t rows, size_t cols) {
     mat->cols = cols;
     mat->stride = cols;  
     
-    memset(mat->data, 0, total_elements * sizeof(float));
+    // only zero the actual data we're using, not the entire aligned block
+    memset(mat->data, 0, size_in_bytes);
     
     return mat;
 }
