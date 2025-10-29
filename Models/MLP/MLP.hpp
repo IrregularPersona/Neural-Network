@@ -292,7 +292,7 @@ int mlp_update_weights(MLP* mlp) {
   return 0;
 }
 
-float mlp_train(MLP* mlp, Matrix** inputs, Matrix** targets, size_t num_samples, size_t epochs, LossFunction loss_func) {
+float mlp_train(MLP* mlp, Matrix** inputs, Matrix** targets, size_t num_samples, size_t epochs, LossFunction loss_func, float epsilon) {
   if (!mlp || !inputs || !targets) return -1.0f;
 
   for (size_t i = 0; i < mlp->num_layers; i++) {
@@ -361,6 +361,8 @@ float mlp_train(MLP* mlp, Matrix** inputs, Matrix** targets, size_t num_samples,
     avg_loss = epoch_loss / num_samples;
     if (epoch % 10 == 0 || epoch == epochs - 1)
       printf("Epoch %zu/%zu = Loss: %.4f\n", epoch + 1, epochs, avg_loss);
+
+    if (avg_loss < epsilon) break;
   }
   return avg_loss;
 }

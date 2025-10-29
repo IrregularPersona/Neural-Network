@@ -29,8 +29,9 @@ void test_training() {
     
     Matrix* inputs[] = {input1, input2, input3, input4};
     Matrix* targets[] = {target1, target2, target3, target4};
+    float loss_thresh = 0.0001;
     
-    mlp_train(network, inputs, targets, 4, 2000, LOSS_MSE);
+    mlp_train(network, inputs, targets, 4, 2000, LOSS_MSE, loss_thresh);
    
     printf("\nTesting after training:\n");
     for (int i = 0; i < 4; i++) {
