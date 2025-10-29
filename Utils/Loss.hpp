@@ -5,6 +5,46 @@
 #include <cstddef>
 #include <math.h>
 
+typedef enum {
+  LOSS_MSE,
+  LOSS_MAE,
+  LOSS_CROSS_ENTROPY
+} LossFunction;
+
+// Forward declarations
+float mse(Matrix *pred, Matrix *target);
+float mse_derivative(Matrix *pred, Matrix *target, Matrix *output);
+float mae(Matrix *pred, Matrix *target);
+int mae_derivative(Matrix *pred, Matrix *target, Matrix *output);
+float cross_entropy(Matrix *pred, Matrix *target);
+float cross_entropy_derivative(Matrix *pred, Matrix *target, Matrix *output);
+
+float compute_loss(LossFunction loss_func, Matrix *pred, Matrix *target) {
+  switch (loss_func) {
+    case LOSS_MSE:
+      return mse(pred, target);
+    case LOSS_MAE:
+      return mae(pred, target);
+    case LOSS_CROSS_ENTROPY:
+      return cross_entropy(pred, target);
+    default:
+      return mse(pred, target);
+  }
+}
+
+int compute_loss_derivative(LossFunction loss_func, Matrix *pred, Matrix *target, Matrix *output) {
+  switch (loss_func) {
+    case LOSS_MSE:
+      return mse_derivative(pred, target, output);
+    case LOSS_MAE:
+      return mae_derivative(pred, target, output);
+    case LOSS_CROSS_ENTROPY:
+      return cross_entropy_derivative(pred, target, output);
+    default:
+      return mse_derivative(pred, target, output);
+  }
+}
+
 float mae(Matrix *pred, Matrix *target) {
   if (!pred || !target || pred->rows != target->rows ||
       pred->cols != target->cols)

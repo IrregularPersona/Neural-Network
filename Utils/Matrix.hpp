@@ -106,7 +106,6 @@ int mat_is_valid(const Matrix* mat) {
 // HIGH-PERFORMANCE ACCESS FUNCTIONS
 // ============================================================================
 
-// Direct data access (for performance-critical operations)
 static inline float* mat_data(Matrix* mat) {
     return mat ? mat->data : NULL;
 }
@@ -115,7 +114,6 @@ static inline const float* mat_data_const(const Matrix* mat) {
     return mat ? mat->data : NULL;
 }
 
-// Element access with bounds checking
 static inline float mat_get(const Matrix* mat, size_t row, size_t col) {
     if (!mat || !mat->data || row >= mat->rows || col >= mat->cols) {
         return 0.0f;  // Return 0 for invalid access
@@ -123,7 +121,7 @@ static inline float mat_get(const Matrix* mat, size_t row, size_t col) {
     return mat->data[row * mat->stride + col];
 }
 
-static inline int mat_set(Matrix* mat, size_t row, size_t col, float value) {
+static inline int mat_set(Matrix* mat, const size_t row, const size_t col, const float value) {
     if (!mat || !mat->data || row >= mat->rows || col >= mat->cols) {
         return -1;  // Error
     }
@@ -132,11 +130,11 @@ static inline int mat_set(Matrix* mat, size_t row, size_t col, float value) {
 }
 
 // Unsafe element access (for performance-critical loops)
-static inline float mat_get_unsafe(const Matrix* mat, size_t row, size_t col) {
+static inline float mat_get_unsafe(const Matrix* mat, const size_t row, const size_t col) {
     return mat->data[row * mat->stride + col];
 }
 
-static inline void mat_set_unsafe(Matrix* mat, size_t row, size_t col, float value) {
+static inline void mat_set_unsafe(Matrix* mat, const size_t row, const size_t col, const float value) {
     mat->data[row * mat->stride + col] = value;
 }
 
@@ -161,7 +159,6 @@ Matrix* mat_copy(const Matrix* src) {
     return dst;
 }
 
-// Fill matrix with a value
 void mat_fill(Matrix* mat, float value) {
     if (!mat_is_valid(mat)) {
         return;
@@ -173,7 +170,6 @@ void mat_fill(Matrix* mat, float value) {
     }
 }
 
-// Zero matrix
 void mat_zero(Matrix* mat) {
     if (!mat_is_valid(mat)) {
         return;
@@ -187,18 +183,12 @@ void mat_zero(Matrix* mat) {
 // MATRIX OPERATIONS
 // ============================================================================
 
-// Matrix multiplication: result = a * b
 int mat_mul(const Matrix* a, const Matrix* b, Matrix* result) {
     if (!a || !b || !result) return -1;
     if (!mat_is_valid(a) || !mat_is_valid(b) || !mat_is_valid(result)) return -1;
-    
-    // Check dimensions: a->cols must equal b->rows
     if (a->cols != b->rows) return -1;
-    
-    // Check result dimensions
     if (result->rows != a->rows || result->cols != b->cols) return -1;
     
-    // Perform matrix multiplication
     for (size_t i = 0; i < a->rows; i++) {
         for (size_t j = 0; j < b->cols; j++) {
             float sum = 0.0f;
@@ -208,14 +198,12 @@ int mat_mul(const Matrix* a, const Matrix* b, Matrix* result) {
             mat_set_unsafe(result, i, j, sum);
         }
     }
-    
     return 0;
 }
 
 int mat_add(const Matrix* a, const Matrix* b, Matrix* result) {
     if (!a || !b || !result) return -1;
     if (!mat_is_valid(a) || !mat_is_valid(b) || !mat_is_valid(result)) return -1;
-    
     if (a->rows != b->rows || a->cols != b->cols) return -1;
     if (result->rows != a->rows || result->cols != a->cols) return -1;
     
@@ -225,7 +213,6 @@ int mat_add(const Matrix* a, const Matrix* b, Matrix* result) {
             mat_set_unsafe(result, i, j, sum);
         }
     }
-    
     return 0;
 }
 
@@ -245,6 +232,37 @@ int mat_sub(const Matrix* a, const Matrix* b, Matrix* result) {
     return 0;
 }
 
+// inplace
+int mat_transpose(const Matrix* a, Matrix* result) {
+    if (!a || !result) return -1;
+    if (!mat_is_valid(a) || !mat_is_valid(result)) return -1;
+    if (result->rows != a->cols || result->cols != a->rows) return -1;
+    
+    for (size_t i = 0; i < a->rows; i++) {
+        for (size_t j = 0; j < a->cols; j++) {
+            mat_set_unsafe(result, j, i, mat_get(a, i, j));
+        }
+    }
+    
+    return 0;
+}
+
+int mat_hadamard(const Matrix* a, const Matrix* b, Matrix* result) {
+    if (!a || !b || !result) return -1;
+    if (!mat_is_valid(a) || !mat_is_valid(b) || !mat_is_valid(result)) return -1;
+    if (a->rows != b->rows || a->cols != b->cols) return -1;
+    if (result->rows != a->rows || result->cols != a->cols) return -1;
+    
+    for (size_t i = 0; i < a->rows; i++) {
+        for (size_t j = 0; j < a->cols; j++) {
+            float product = mat_get(a, i, j) * mat_get(b, i, j);
+            mat_set_unsafe(result, i, j, product);
+        }
+    }
+    
+    return 0;
+}
+
 void mat_scale(const Matrix* a, float scalar, Matrix* result) {
     if (!mat_is_valid(a) || !result) return;
     if (result->rows != a->rows || result->cols != a->cols) return;
@@ -256,6 +274,8 @@ void mat_scale(const Matrix* a, float scalar, Matrix* result) {
         }
     }
 }
+
+
 
 // ============================================================================
 // DEBUGGING AND UTILITY
