@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -37,12 +38,21 @@ Matrix* mat_create(size_t rows, size_t cols) {
     size_t size_in_bytes = total_elements * sizeof(float);
     size_t aligned_size = (size_in_bytes + 31) & ~31;  // rounding here
     
+#ifdef __ANDROID__
+    void* ptr = NULL;
+    if (posix_memalign(&ptr, 32, aligned_size)) {
+        free(mat);
+        return NULL;
+    }
+    mat->data = (float*)ptr;
+#else
     mat->data = (float*)aligned_alloc(32, aligned_size);
     
     if (!mat->data) {
         free(mat);
         return NULL;
     }
+#endif
     
     mat->rows = rows;
     mat->cols = cols;
